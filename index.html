@@ -47,20 +47,23 @@
         
         .card-bg {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-size: cover; background-position: center; 
-            /* Mengatur brightness agar gambar tidak terlalu gelap */
-            filter: brightness(0.75); 
+            /* Menggunakan contain agar gambar tampil utuh proporsional dan tidak terpotong */
+            background-size: contain; 
+            background-repeat: no-repeat;
+            background-position: center; 
+            background-color: #161616; /* Warna latar belakang sisa jika rasio gambar berbeda */
+            filter: brightness(0.8); 
             transition: filter 0.3s;
         }
-        .card:hover .card-bg { filter: brightness(0.9); }
+        .card:hover .card-bg { filter: brightness(0.95); }
         
-        /* Gradasi gelap hanya di bagian bawah agar teks terbaca jelas, gambar atas aman */
+        /* Gradasi gelap di bagian bawah agar teks tetap sangat kontras dan terbaca */
         .card-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 40%, rgba(0,0,0,0.1) 100%);
+            background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 45%, rgba(0,0,0,0.1) 100%);
         }
 
-        /* Posisi elemen dipindah ke bawah (bottom) */
+        /* Posisi elemen di bagian bawah (bottom) */
         .card-ranking {
             position: absolute; left: 20px; bottom: 20px;
             font-size: 1.5rem; font-weight: 700; color: rgba(255, 255, 255, 0.9);
@@ -113,6 +116,7 @@
         let allData = [];
 
         async function loadWatchlist() {
+            // Ganti URL Web App Google Apps Script Anda jika diperlukan
             const scriptUrl = "https://script.google.com/macros/s/AKfycbxG0m2yvFlttTWAl4E2fit26E1BCVENQXuc9zAXRKkjyge-3yQ9Z006X7gTciTZLGc5gg/exec"; 
 
             try {
