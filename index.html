@@ -1,14 +1,93 @@
-<script>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dito's Watchlist 2026</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background-color: #121212; color: #ffffff; padding: 20px; }
+        header { text-align: center; margin-bottom: 30px; }
+        header h1 { font-size: 2rem; color: #00e054; }
+        header p { color: #888; font-size: 0.95rem; margin-top: 5px; }
+        .container { max-width: 700px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+        
+        .skeleton-card {
+            width: 100%; height: 220px; border-radius: 16px;
+            background: linear-gradient(90deg, #1a1a1a 25%, #252525 50%, #1a1a1a 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .card {
+            position: relative; width: 100%; height: 220px; border-radius: 16px;
+            overflow: hidden; background-color: #1a1a1a; box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+            cursor: pointer; text-decoration: none; color: inherit; display: block;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .card:hover { transform: scale(1.02); box-shadow: 0 12px 25px rgba(0,225,84,0.2); }
+        .card-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover; background-position: center; filter: brightness(0.6);
+            transition: filter 0.3s;
+        }
+        .card:hover .card-bg { filter: brightness(0.75); }
+        .card-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(90deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.7) 100%);
+        }
+        .card-ranking {
+            position: absolute; left: 20px; top: 50%; transform: translateY(-50%);
+            font-size: 2rem; font-weight: 700; color: rgba(255, 255, 255, 0.85);
+            background: rgba(0, 0, 0, 0.4); padding: 10px 15px; border-radius: 10px; backdrop-filter: blur(5px);
+            z-index: 2;
+        }
+        .card-content {
+            position: absolute; left: 110px; right: 20px; top: 50%; transform: translateY(-50%);
+            display: flex; flex-direction: column; gap: 8px; z-index: 2;
+        }
+        .card-title {
+            font-size: 1.4rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 1px; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+        .card-rating { display: flex; gap: 4px; color: #00e054; font-size: 1.1rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
+        .card-rating .far { color: rgba(255, 255, 255, 0.3); }
+        .error { text-align: center; padding: 40px; font-size: 1rem; color: #ff5252; background: #1a1a1a; border-radius: 12px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Dito's Letterboxd Watchlist</h1>
+        <p>Otomatisasi Film & Serial 2026</p>
+    </header>
+
+    <div class="container" id="card-container">
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+    </div>
+
+    <script>
         async function loadWatchlist() {
             const container = document.getElementById("card-container");
             const scriptUrl = "https://script.google.com/macros/s/AKfycbzXkYj86BELc0Ta0raLLn2O0_d2TeGOpM1qjvIhv0E8SOguCHjNwz8cxDzqOL6YpKfhKw/exec"; 
 
             try {
                 let response = await fetch(scriptUrl);
+                if (!response.ok) throw new Error("HTTP error! status: " + response.status);
+                
                 let data = await response.json();
 
                 if (!data || data.length === 0) {
-                    container.innerHTML = `<div class="error">Belum ada data untuk ditampilkan.</div>`;
+                    container.innerHTML = `<div class="error">Belum ada data untuk ditampilkan di Spreadsheet.</div>`;
                     return;
                 }
 
@@ -39,7 +118,7 @@
                     container.innerHTML += cardHtml;
                 }
             } catch (err) {
-                container.innerHTML = `<div class="error">Gagal memuat data dari server.</div>`;
+                container.innerHTML = `<div class="error">Gagal memuat data: ${err.message}.<br>Pastikan Web App sudah dideploy ulang dengan akses 'Anyone'.</div>`;
             }
         }
 
@@ -62,3 +141,5 @@
 
         loadWatchlist();
     </script>
+</body>
+</html>
