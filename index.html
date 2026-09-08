@@ -1,0 +1,64 @@
+<script>
+        async function loadWatchlist() {
+            const container = document.getElementById("card-container");
+            const scriptUrl = "https://script.google.com/macros/s/AKfycbzXkYj86BELc0Ta0raLLn2O0_d2TeGOpM1qjvIhv0E8SOguCHjNwz8cxDzqOL6YpKfhKw/exec"; 
+
+            try {
+                let response = await fetch(scriptUrl);
+                let data = await response.json();
+
+                if (!data || data.length === 0) {
+                    container.innerHTML = `<div class="error">Belum ada data untuk ditampilkan.</div>`;
+                    return;
+                }
+
+                container.innerHTML = "";
+
+                for (let i = 0; i < data.length; i++) {
+                    let item = data[i];
+                    let starHtml = generateStars(item.rating);
+                    
+                    let formattedSlug = item.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+                    let letterboxdOfficialUrl = `https://letterboxd.com/${item.type === 'serial' ? 'show' : 'film'}/${formattedSlug}/`;
+
+                    let bgHtml = item.backdrop ? `
+                        <div class="card-bg" style="background-image: url('${item.backdrop}');" loading="lazy"></div>
+                        <div class="card-overlay"></div>
+                    ` : '';
+
+                    let cardHtml = `
+                        <a href="${letterboxdOfficialUrl}" target="_blank" class="card">
+                            ${bgHtml}
+                            <div class="card-ranking">#${i + 1}</div>
+                            <div class="card-content">
+                                <div class="card-title">${item.name}</div>
+                                <div class="card-rating">${starHtml}</div>
+                            </div>
+                        </a>
+                    `;
+                    container.innerHTML += cardHtml;
+                }
+            } catch (err) {
+                container.innerHTML = `<div class="error">Gagal memuat data dari server.</div>`;
+            }
+        }
+
+        function generateStars(rating) {
+            let html = "";
+            let fullStars = Math.floor(rating);
+            let hasHalfStar = (rating - fullStars) >= 0.5;
+
+            for (let i = 0; i < 5; i++) {
+                if (i < fullStars) {
+                    html += `<i class="fas fa-star"></i>`;
+                } else if (i === fullStars && hasHalfStar) {
+                    html += `<i class="fas fa-star-half-alt"></i>`;
+                } else {
+                    html += `<i class="far fa-star"></i>`;
+                }
+            }
+            return html;
+        }
+
+        loadWatchlist();
+    </script>
