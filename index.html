@@ -12,8 +12,19 @@
         body { background-color: #121212; color: #ffffff; padding: 20px; }
         header { text-align: center; margin-bottom: 30px; }
         header h1 { font-size: 2rem; color: #00e054; }
-        header p { color: #888; font-size: 0.95rem; margin-top: 5px; }
-        .container { max-width: 700px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+        
+        /* Navigasi Tab */
+        .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 25px; }
+        .tab-btn {
+            background-color: #1a1a1a; color: #888; border: 2px solid #252525;
+            padding: 10px 24px; font-size: 1rem; font-weight: 600; border-radius: 30px;
+            cursor: pointer; transition: all 0.2s ease;
+        }
+        .tab-btn.active { background-color: #00e054; color: #121212; border-color: #00e054; }
+        .tab-btn:hover { border-color: #00e054; color: #ffffff; }
+
+        .container { max-width: 700px; margin: 0 auto; display: none; flex-direction: column; gap: 20px; }
+        .container.active { display: flex; }
         
         .skeleton-card {
             width: 100%; height: 220px; border-radius: 16px;
@@ -33,92 +44,146 @@
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
         .card:hover { transform: scale(1.02); box-shadow: 0 12px 25px rgba(0,225,84,0.2); }
+        
         .card-bg {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-size: cover; background-position: center; filter: brightness(0.6);
+            background-size: cover; background-position: center; 
+            /* Mengatur brightness agar gambar tidak terlalu gelap */
+            filter: brightness(0.75); 
             transition: filter 0.3s;
         }
-        .card:hover .card-bg { filter: brightness(0.75); }
+        .card:hover .card-bg { filter: brightness(0.9); }
+        
+        /* Gradasi gelap hanya di bagian bawah agar teks terbaca jelas, gambar atas aman */
         .card-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(90deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.7) 100%);
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 40%, rgba(0,0,0,0.1) 100%);
         }
+
+        /* Posisi elemen dipindah ke bawah (bottom) */
         .card-ranking {
-            position: absolute; left: 20px; top: 50%; transform: translateY(-50%);
-            font-size: 2rem; font-weight: 700; color: rgba(255, 255, 255, 0.85);
-            background: rgba(0, 0, 0, 0.4); padding: 10px 15px; border-radius: 10px; backdrop-filter: blur(5px);
+            position: absolute; left: 20px; bottom: 20px;
+            font-size: 1.5rem; font-weight: 700; color: rgba(255, 255, 255, 0.9);
+            background: rgba(0, 0, 0, 0.6); padding: 5px 12px; border-radius: 8px; backdrop-filter: blur(5px);
             z-index: 2;
         }
+        
         .card-content {
-            position: absolute; left: 110px; right: 20px; top: 50%; transform: translateY(-50%);
-            display: flex; flex-direction: column; gap: 8px; z-index: 2;
+            position: absolute; left: 95px; right: 20px; bottom: 20px;
+            display: flex; flex-direction: column; gap: 4px; z-index: 2;
         }
+        
         .card-title {
-            font-size: 1.4rem; font-weight: 700; text-transform: uppercase;
-            letter-spacing: 1px; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            font-size: 1.25rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.5px; text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-        .card-rating { display: flex; gap: 4px; color: #00e054; font-size: 1.1rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
+        
+        .card-rating { display: flex; gap: 4px; color: #00e054; font-size: 1rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.9); }
         .card-rating .far { color: rgba(255, 255, 255, 0.3); }
+        
         .error { text-align: center; padding: 40px; font-size: 1rem; color: #ff5252; background: #1a1a1a; border-radius: 12px; }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>Dito's Letterboxd Watchlist</h1>
-        <p>Otomatisasi Film & Serial 2026</p>
+        <h1 id="page-title">2026 Movie Ranking</h1>
     </header>
 
-    <div class="container" id="card-container">
+    <!-- Tombol Tab Pemisah -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('film', event)">Movies</button>
+        <button class="tab-btn" onclick="switchTab('serial', event)">Series</button>
+    </div>
+
+    <!-- Container Film -->
+    <div class="container active" id="film-container">
         <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+    </div>
+
+    <!-- Container Serial -->
+    <div class="container" id="serial-container">
         <div class="skeleton-card"></div>
         <div class="skeleton-card"></div>
     </div>
 
     <script>
+        let allData = [];
+
         async function loadWatchlist() {
-            const container = document.getElementById("card-container");
             const scriptUrl = "https://script.google.com/macros/s/AKfycbxG0m2yvFlttTWAl4E2fit26E1BCVENQXuc9zAXRKkjyge-3yQ9Z006X7gTciTZLGc5gg/exec"; 
 
             try {
                 let response = await fetch(scriptUrl);
                 if (!response.ok) throw new Error("HTTP error! status: " + response.status);
                 
-                let data = await response.json();
+                allData = await response.json();
 
-                if (!data || data.length === 0) {
-                    container.innerHTML = `<div class="error">Belum ada data untuk ditampilkan di Spreadsheet.</div>`;
-                    return;
-                }
+                renderData('film', 'film-container');
+                renderData('serial', 'serial-container');
 
-                container.innerHTML = "";
-
-                for (let i = 0; i < data.length; i++) {
-                    let item = data[i];
-                    let starHtml = generateStars(item.rating);
-                    
-                    let formattedSlug = item.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-                    let letterboxdOfficialUrl = `https://letterboxd.com/${item.type === 'serial' ? 'show' : 'film'}/${formattedSlug}/`;
-
-                    let bgHtml = item.backdrop ? `
-                        <div class="card-bg" style="background-image: url('${item.backdrop}');" loading="lazy"></div>
-                        <div class="card-overlay"></div>
-                    ` : '';
-
-                    let cardHtml = `
-                        <a href="${letterboxdOfficialUrl}" target="_blank" class="card">
-                            ${bgHtml}
-                            <div class="card-ranking">#${i + 1}</div>
-                            <div class="card-content">
-                                <div class="card-title">${item.name}</div>
-                                <div class="card-rating">${starHtml}</div>
-                            </div>
-                        </a>
-                    `;
-                    container.innerHTML += cardHtml;
-                }
             } catch (err) {
-                container.innerHTML = `<div class="error">Gagal memuat data: ${err.message}.<br>Pastikan Web App sudah dideploy ulang dengan akses 'Anyone'.</div>`;
+                document.getElementById("film-container").innerHTML = `<div class="error">Gagal memuat data: ${err.message}.</div>`;
+                document.getElementById("serial-container").innerHTML = `<div class="error">Gagal memuat data: ${err.message}.</div>`;
+            }
+        }
+
+        function renderData(type, containerId) {
+            const container = document.getElementById(containerId);
+            const filteredData = allData.filter(item => item.type === type);
+
+            if (filteredData.length === 0) {
+                container.innerHTML = `<div class="error">Belum ada data untuk ditampilkan.</div>`;
+                return;
+            }
+
+            container.innerHTML = "";
+
+            filteredData.forEach((item, index) => {
+                let starHtml = generateStars(item.rating);
+                
+                let formattedSlug = item.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+                let letterboxdOfficialUrl = `https://letterboxd.com/film/${formattedSlug}/`;
+
+                let bgHtml = item.backdrop ? `
+                    <div class="card-bg" style="background-image: url('${item.backdrop}');" loading="lazy"></div>
+                    <div class="card-overlay"></div>
+                ` : '';
+
+                let cardHtml = `
+                    <a href="${letterboxdOfficialUrl}" target="_blank" class="card">
+                        ${bgHtml}
+                        <div class="card-ranking">#${index + 1}</div>
+                        <div class="card-content">
+                            <div class="card-title">${item.name}</div>
+                            <div class="card-rating">${starHtml}</div>
+                        </div>
+                    </a>
+                `;
+                container.innerHTML += cardHtml;
+            });
+        }
+
+        function switchTab(type, event) {
+            const filmContainer = document.getElementById("film-container");
+            const serialContainer = document.getElementById("serial-container");
+            const pageTitle = document.getElementById("page-title");
+            const buttons = document.querySelectorAll(".tab-btn");
+
+            buttons.forEach(btn => btn.classList.remove("active"));
+
+            if (type === 'film') {
+                filmContainer.classList.add("active");
+                serialContainer.classList.remove("active");
+                pageTitle.textContent = "2026 Movie Ranking";
+                event.target.classList.add("active");
+            } else {
+                serialContainer.classList.add("active");
+                filmContainer.classList.remove("active");
+                pageTitle.textContent = "2026 Series Ranking";
+                event.target.classList.add("active");
             }
         }
 
